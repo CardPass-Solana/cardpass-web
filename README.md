@@ -1,32 +1,61 @@
-# SolidStart
+# CardPass
 
-Everything you need to build a Solid project, powered by [`solid-start`](https://start.solidjs.com);
+**"Contact costs, referrals reward."**
 
-## Creating a project
+A Solana-based professional networking platform using compressed NFT business cards with spam-resistant contact requests and automated referral rewards.
+
+## Core Features
+
+- **Contact Gate**: Pay to contact professionals, preventing spam while compensating for their time
+- **Intro Rewards**: Earn rewards for successful referrals through automated escrow distribution
+- **cNFT Business Cards**: Low-cost, verifiable digital business cards on Solana
+
+## How It Works
+
+1. **Create Profile**: Connect wallet → mint business card cNFT → set contact price
+2. **Contact Requests**: Recruiters deposit USDC to unlock contact info (refunded if replied within 24h)
+3. **Job Referrals**: Create referral links for job postings → earn bounties when candidates get hired
+
+---
+
+## Development
+
+This is a SolidStart project, powered by [`solid-start`](https://start.solidjs.com).
+
+### Getting Started
 
 ```bash
-# create a new project in the current directory
-npm init solid@latest
+# Install dependencies
+pnpm install
 
-# create a new project in my-app
-npm init solid@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
+# Start development server
+pnpm dev
 
 # or start the server and open the app in a new browser tab
-npm run dev -- --open
+pnpm dev -- --open
 ```
 
-## Building
+### Building
 
-Solid apps are built with _presets_, which optimise your project for deployment to different environments.
+```bash
+# Build for production
+pnpm build
 
-By default, `npm run build` will generate a Node app that you can run with `npm start`. To use a different preset, add it to the `devDependencies` in `package.json` and specify in your `app.config.js`.
+# Start production server
+pnpm start
+```
 
-## This project was created with the [Solid CLI](https://github.com/solidjs-community/solid-cli)
+Solid apps are built with _presets_, which optimise your project for deployment to different environments. To use a different preset, add it to the `devDependencies` in `package.json` and specify in your `app.config.js`.
+
+---
+
+## Project Structure
+
+- `/src/routes` - Page components and API routes
+- `/src/components` - Reusable UI components  
+- `/src/lib` - Utilities and Solana integration
+- `/public` - Static assets
+
+---
+
+This project was created with the [Solid CLI](https://github.com/solidjs-community/solid-cli)

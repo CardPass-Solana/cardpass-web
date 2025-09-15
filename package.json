@@ -1,23 +1,25 @@
 {
-  "name": "example-with-tailwindcss",
-  "type": "module",
-  "scripts": {
-    "dev": "vinxi dev",
-    "build": "vinxi build",
-    "start": "vinxi start"
-  },
-  "dependencies": {
-    "@solidjs/router": "^0.15.3",
-    "@solidjs/start": "^1.2.0",
-    "solid-js": "^1.9.9",
-    "vinxi": "^0.5.8"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.1.13",
-    "tailwindcss": "^4.1.13"
-  },
-  "engines": {
-    "node": ">=22"
-  },
-  "packageManager": "pnpm@10.16.1+sha512.0e155aa2629db8672b49e8475da6226aa4bdea85fdcdfdc15350874946d4f3c91faaf64cbdc4a5d1ab8002f473d5c3fcedcd197989cf0390f9badd3c04678706"
+	"name": "cardpass-web",
+	"type": "module",
+	"scripts": {
+		"dev": "vinxi dev",
+		"build": "vinxi build",
+		"start": "vinxi start"
+	},
+	"dependencies": {
+		"@fontsource/pretendard": "^5.2.5",
+		"@solid-primitives/i18n": "^2.2.1",
+		"@solidjs/router": "^0.15.3",
+		"@solidjs/start": "^1.2.0",
+		"solid-js": "^1.9.9",
+		"vinxi": "^0.5.8"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.1.13",
+		"tailwindcss": "^4.1.13"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"packageManager": "pnpm@10.16.1+sha512.0e155aa2629db8672b49e8475da6226aa4bdea85fdcdfdc15350874946d4f3c91faaf64cbdc4a5d1ab8002f473d5c3fcedcd197989cf0390f9badd3c04678706"
 }

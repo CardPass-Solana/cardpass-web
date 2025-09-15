@@ -4,7 +4,11 @@
 	"scripts": {
 		"dev": "vinxi dev",
 		"build": "vinxi build",
-		"start": "vinxi start"
+		"start": "vinxi start",
+		"format": "biome format --write .",
+		"lint": "biome lint --write .",
+		"check": "biome check --write .",
+		"check:ci": "biome check ."
 	},
 	"dependencies": {
 		"@fontsource/pretendard": "^5.2.5",
@@ -15,6 +19,7 @@
 		"vinxi": "^0.5.8"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "2.2.4",
 		"@tailwindcss/vite": "^4.1.13",
 		"tailwindcss": "^4.1.13"
 	},

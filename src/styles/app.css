@@ -6,12 +6,13 @@
 @import "tailwindcss";
 
 :root {
-  --background-rgb: 0, 0, 0;
-  --foreground-rgb: 255, 255, 255;
+	--background-rgb: 0, 0, 0;
+	--foreground-rgb: 255, 255, 255;
 }
 
 body {
-  background: rgb(var(--background-rgb));
-  color: rgb(var(--foreground-rgb));
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+	background: rgb(var(--background-rgb));
+	color: rgb(var(--foreground-rgb));
+	font-family:
+		"Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 }

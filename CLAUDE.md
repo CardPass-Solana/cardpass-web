@@ -13,8 +13,8 @@ CardPass is a Solana-based professional networking platform built with SolidStar
 ## Development Commands
 
 ### Core Commands
-- `pnpm run dev` - Start development server (uses Vinxi)
-- `pnpm run build` - Build for production
+- `pnpm dev` - Start development server (uses Vinxi)
+- `pnpm build` - Build for production
 - `pnpm start` - Start production server
 
 ### Package Management
@@ -81,11 +81,77 @@ src/
 
 ## Development Notes
 
-### SolidJS Specifics
-- Use `createSignal`, `createEffect`, `createMemo` for reactivity
+### Code Style Guidelines
+- **ALWAYS** use SolidJS control flow components (`<Show>`, `<For>`, `<Switch>`) instead of JS conditionals
+- **ALWAYS** use reactive primitives for state that changes
+- **NEVER** destructure props - access them directly to maintain reactivity
+- **PREFER** `createMemo` over inline computations for derived state
+- **PREFER** `createStore` for complex objects over multiple signals
+- **USE** `batch()` when updating multiple signals at once
+
+### SolidJS Best Practices - IMPORTANT
+
+#### Core Reactivity Primitives
+- **createSignal**: For reactive state management
+  ```tsx
+  const [count, setCount] = createSignal(0);
+  ```
+- **createEffect**: For side effects that re-run when dependencies change
+  ```tsx
+  createEffect(() => console.log("Count changed:", count()));
+  ```
+- **createMemo**: For computed values with automatic memoization
+  ```tsx
+  const doubled = createMemo(() => count() * 2);
+  ```
+- **createResource**: For async data fetching
+  ```tsx
+  const [data] = createResource(userId, fetchUser);
+  ```
+- **createStore**: For complex reactive state objects
+  ```tsx
+  const [state, setState] = createStore({ user: null, isLoading: false });
+  ```
+
+#### Control Flow Components - ALWAYS USE THESE
+- **<Show>**: Conditional rendering (preferred over ternary)
+  ```tsx
+  <Show when={isLoggedIn()} fallback={<LoginButton />}>
+    <Dashboard />
+  </Show>
+  ```
+- **<For>**: List rendering with automatic keying
+  ```tsx
+  <For each={items()}>{(item, index) =>
+    <ListItem item={item} index={index()} />
+  }</For>
+  ```
+- **<Switch>/<Match>**: Multiple conditional branches
+  ```tsx
+  <Switch>
+    <Match when={state() === "loading"}><Spinner /></Match>
+    <Match when={state() === "error"}><Error /></Match>
+    <Match when={state() === "success"}><Success /></Match>
+  </Switch>
+  ```
+- **<Index>**: For primitive arrays where item identity doesn't matter
+- **<ErrorBoundary>**: Error handling in component trees
+- **<Suspense>**: Loading states for async components
+- **<Portal>**: Render outside component hierarchy
+
+#### Additional Primitives
+- **onMount**: Component lifecycle hook
+- **onCleanup**: Cleanup function for effects
+- **batch**: Batch multiple updates
+- **untrack**: Opt out of tracking
+
+#### Key Differences from React
 - No virtual DOM - direct DOM manipulation
+- Components run once - use reactive primitives for updates
+- No hooks rules - can use conditionals
+- Fine-grained reactivity - only what's needed updates
 - `<A>` component for client-side navigation instead of `<a>`
-- `useLocation()` hook for accessing current route
+- `class` instead of `className`
 - Arrays and objects should be wrapped in functions for reactivity
 
 ### Internationalization Best Practices
@@ -100,3 +166,35 @@ src/
 - Component-scoped classes using `class` attribute (not `className`)
 - Dark theme with gradient accents (violet/cyan)
 - Consistent spacing and rounded corners (rounded-xl, rounded-2xl)
+
+## Wallet Integration
+
+### Solana Wallet Adapter
+- **Library**: `@solana/wallet-adapter-base` for wallet connections
+- **Supported Wallets**: Phantom, Solflare (manually configured)
+- **Wallet Standard**: Not used due to SSR compatibility issues
+- **Architecture**: Direct adapter usage without intermediate libraries
+
+#### Wallet Manager (`src/lib/wallet-manager.ts`)
+- Initializes wallet adapters only on client side (`typeof window !== "undefined")
+- Returns empty array on SSR to prevent hydration mismatches
+- Manually configures Phantom and Solflare adapters
+- Sorts wallets by ready state (Installed > Loadable > NotDetected)
+
+#### Wallet Store (`src/store/wallet.ts`)
+- Uses SolidJS `createStore` for reactive state management
+- Handles wallet connection/disconnection
+- Manages modal visibility
+- Sets up event listeners for wallet events
+
+#### Key Implementation Details
+- **SSR Safety**: Always check `typeof window === "undefined"` before accessing browser APIs
+- **Hydration**: Ensure server and client render identical initial HTML
+- **Event Cleanup**: Use `onCleanup()` to remove event listeners
+- **Error Handling**: Gracefully handle connection failures
+
+### Wallet UI Components
+- **WalletModal**: Custom modal using SolidJS Portal
+- **SolanaWalletButton**: Connection button with state display
+- Uses `<Show>` and `<For>` for conditional rendering
+- Reactive state updates via signals and stores

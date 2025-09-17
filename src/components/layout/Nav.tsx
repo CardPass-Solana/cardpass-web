@@ -1,5 +1,6 @@
 import { A, useLocation } from "@solidjs/router";
 import LanguageSwitcher from "~/components/ui/LanguageSwitcher";
+import SolanaWalletButton from "~/components/ui/SolanaWalletButton";
 import { useI18n } from "~/contexts/i18n";
 
 export default function Nav() {
@@ -63,12 +64,7 @@ export default function Nav() {
 
 					<div class="flex items-center gap-4">
 						<LanguageSwitcher />
-						<button
-							type="button"
-							class="px-5 py-2 bg-gradient-to-r from-violet-600 to-cyan-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-						>
-							{t("nav.connectWallet")}
-						</button>
+						<SolanaWalletButton />
 					</div>
 				</div>
 			</div>

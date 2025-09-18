@@ -14,7 +14,7 @@ export default defineConfig({
 			// Wrangler configuration (equivalent to wrangler.toml)
 			wrangler: {
 				vars: {
-					VITE_API_URL: "https://mihari-temp.yeongmin.net",
+					API_URL: "https://mihari-temp.yeongmin.net",
 				},
 			},
 		},

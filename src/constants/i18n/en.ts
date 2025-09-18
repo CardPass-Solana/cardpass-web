@@ -127,6 +127,7 @@ export const dict = {
 		bountyLabel: "Referral Bounty",
 		applyButton: "Apply",
 		createReferralButton: "Create Referral Link",
+		viewDetails: "View Details",
 		noResults: "No search results",
 		postedPrefix: "", // Empty as it's included in the data
 		jobList: [

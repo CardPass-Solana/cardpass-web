@@ -1,4 +1,5 @@
 import { createMemo, createSignal, For } from "solid-js";
+import { A } from "@solidjs/router";
 import { useI18n } from "~/contexts/i18n";
 
 interface Job {
@@ -94,9 +95,11 @@ export default function Jobs() {
 									<div class="flex-1">
 										<div class="flex items-start justify-between mb-3">
 											<div>
-												<h2 class="text-2xl font-bold text-white mb-2 group-hover:text-violet-400 transition-colors">
-													{job.title}
-												</h2>
+												<A href={`/jobs/${job.id}`}>
+													<h2 class="text-2xl font-bold text-white mb-2 group-hover:text-violet-400 transition-colors">
+														{job.title}
+													</h2>
+												</A>
 												<div class="flex flex-wrap items-center gap-3 text-gray-400 text-sm">
 													<span class="font-medium text-gray-300">
 														{job.company}
@@ -135,18 +138,18 @@ export default function Jobs() {
 										</div>
 
 										<div class="flex gap-2">
-											<button
-												type="button"
-												class="px-4 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
+											<A
+												href={`/jobs/${job.id}`}
+												class="px-4 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors inline-block"
+											>
+												{t("jobs.viewDetails")}
+											</A>
+											<A
+												href={`/jobs/${job.id}`}
+												class="px-4 py-2 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-violet-500/25 transition-all inline-block"
 											>
 												{t("jobs.applyButton")}
-											</button>
-											<button
-												type="button"
-												class="px-4 py-2 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-											>
-												{t("jobs.createReferralButton")}
-											</button>
+											</A>
 										</div>
 									</div>
 								</div>

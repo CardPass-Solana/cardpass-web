@@ -125,6 +125,7 @@ export const dict = {
 		bountyLabel: "소개 바운티",
 		applyButton: "지원하기",
 		createReferralButton: "소개 링크 생성",
+		viewDetails: "상세 보기",
 		noResults: "검색 결과가 없습니다",
 		postedPrefix: "", // Empty in Korean as it's already included in the data
 		jobList: [

@@ -4,6 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
 	vite: {
 		plugins: [tailwindcss()],
+		// Ensure environment variables are passed to client
+		define: {
+			'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://mihari-temp.yeongmin.net'),
+		},
 	},
 	server: {
 		compatibilityDate: "2024-09-19",
@@ -14,7 +18,7 @@ export default defineConfig({
 			// Wrangler configuration (equivalent to wrangler.toml)
 			wrangler: {
 				vars: {
-					API_URL: "https://mihari-temp.yeongmin.net",
+					VITE_API_URL: "https://mihari-temp.yeongmin.net",
 				},
 			},
 		},

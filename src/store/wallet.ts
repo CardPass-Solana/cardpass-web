@@ -7,6 +7,7 @@ import {
   sortWalletsByReadyState,
   type WalletConfig,
 } from "~/lib/wallet-manager";
+import { AuthClient, signMessage, encodeSignature } from "~/lib/auth-client";
 
 export interface WalletState {
   isInitialized: boolean;
@@ -17,6 +18,9 @@ export interface WalletState {
   wallets: WalletConfig[];
   publicKey: string | null;
   walletName: string | null;
+  isAuthenticated: boolean;
+  isAuthenticating: boolean;
+  authError: string | null;
 }
 
 const [walletState, setWalletState] = createStore<WalletState>({
@@ -28,10 +32,17 @@ const [walletState, setWalletState] = createStore<WalletState>({
   wallets: [],
   publicKey: null,
   walletName: null,
+  isAuthenticated: false,
+  isAuthenticating: false,
+  authError: null,
 });
 
+const authClient = new AuthClient();
+
+const LAST_WALLET_KEY = "cardpass-last-wallet";
+
 // Initialize wallet system
-export function initializeWallet() {
+export async function initializeWallet() {
   if (walletState.isInitialized) return;
 
   // Skip initialization on server side
@@ -47,21 +58,52 @@ export function initializeWallet() {
     wallets: sortedWallets,
     isInitialized: true,
   });
+
+  // Check if user is already authenticated
+  try {
+    const authInfo = await authClient.me();
+    if (authInfo) {
+      setWalletState({
+        isAuthenticated: true,
+        publicKey: authInfo.sub,
+      });
+    }
+  } catch (error) {
+    // Not authenticated, ignore error
+  }
+
+  // Auto-connect last used wallet
+  const lastWalletName = localStorage.getItem(LAST_WALLET_KEY);
+  if (lastWalletName) {
+    const wallet = sortedWallets.find(w => w.name === lastWalletName);
+    if (wallet && wallet.readyState !== "NotDetected") {
+      console.log(`Auto-connecting to ${lastWalletName}...`);
+      try {
+        await connectWallet(wallet, true); // true = auto-connect
+      } catch (error) {
+        console.error("Auto-connect failed:", error);
+        localStorage.removeItem(LAST_WALLET_KEY);
+      }
+    }
+  }
 }
 
 // Connect to a wallet
-export async function connectWallet(walletConfig: WalletConfig) {
+export async function connectWallet(walletConfig: WalletConfig, isAutoConnect = false) {
   const { adapter, readyState } = walletConfig;
 
   // Check if wallet is not installed and handle accordingly
   if (readyState === "NotDetected") {
     setWalletState({ isConnecting: false });
 
-    // Open installation page for the wallet
-    if (walletConfig.name === "Phantom") {
-      window.open("https://phantom.app/download", "_blank");
-    } else if (walletConfig.name === "Solflare") {
-      window.open("https://solflare.com/download", "_blank");
+    // Don't open installation page on auto-connect
+    if (!isAutoConnect) {
+      // Open installation page for the wallet
+      if (walletConfig.name === "Phantom") {
+        window.open("https://phantom.app/download", "_blank");
+      } else if (walletConfig.name === "Solflare") {
+        window.open("https://solflare.com/download", "_blank");
+      }
     }
 
     return;
@@ -70,22 +112,59 @@ export async function connectWallet(walletConfig: WalletConfig) {
   try {
     setWalletState({ isConnecting: true });
 
+    // Check current auth status before connecting
+    let currentAuthInfo = null;
+    try {
+      currentAuthInfo = await authClient.me();
+    } catch {
+      // Not authenticated
+    }
+
     // Set up event listeners
-    const handleConnect = () => {
+    const handleConnect = async () => {
+      const publicKey = adapter.publicKey?.toString() || null;
+
       setWalletState({
         isConnected: true,
-        publicKey: adapter.publicKey?.toString() || null,
+        publicKey,
         walletName: adapter.name,
       });
+
+      // Only authenticate if not already authenticated or if it's a different wallet
+      if (publicKey) {
+        // Check if already authenticated with the same wallet
+        if (currentAuthInfo && currentAuthInfo.sub === publicKey) {
+          console.log("Already authenticated with this wallet, skipping signature");
+          setWalletState({
+            isAuthenticated: true,
+            authError: null,
+          });
+          return;
+        }
+
+        // New wallet or not authenticated, require signature
+        await authenticateWallet(adapter);
+      }
     };
 
-    const handleDisconnect = () => {
+    const handleDisconnect = async () => {
       setWalletState({
         isConnected: false,
         adapter: null,
         publicKey: null,
         walletName: null,
+        isAuthenticated: false,
       });
+
+      // Clear saved wallet
+      localStorage.removeItem(LAST_WALLET_KEY);
+
+      // Logout from backend
+      try {
+        await authClient.logout();
+      } catch (error) {
+        console.error("Failed to logout:", error);
+      }
     };
 
     const handleError = (error: any) => {
@@ -107,6 +186,9 @@ export async function connectWallet(walletConfig: WalletConfig) {
       isModalOpen: false,
     });
 
+    // Save last connected wallet
+    localStorage.setItem(LAST_WALLET_KEY, walletConfig.name);
+
     // Cleanup function for when adapter changes
     onCleanup(() => {
       adapter.off("connect", handleConnect);
@@ -119,33 +201,110 @@ export async function connectWallet(walletConfig: WalletConfig) {
       isConnecting: false,
       adapter: null,
     });
+
+    // Don't throw error for auto-connect, fail silently
+    if (!isAutoConnect) {
+      throw error;
+    }
+  }
+}
+
+// Authenticate wallet with backend
+async function authenticateWallet(adapter: Adapter) {
+  if (!adapter.publicKey) {
+    throw new Error("Wallet not connected");
+  }
+
+  const publicKey = adapter.publicKey.toString();
+
+  try {
+    setWalletState({
+      isAuthenticating: true,
+      authError: null,
+    });
+
+    // Step 1: Get challenge from backend
+    const challenge = await authClient.createChallenge({
+      wallet: publicKey,
+      purpose: "Login",
+      domain: window.location.hostname,
+    });
+
+    // Step 2: Sign the challenge message
+    const signature = await signMessage(adapter, challenge.message);
+    const encodedSignature = encodeSignature(signature, "base64");
+
+    // Step 3: Verify signature with backend
+    const verifyResponse = await authClient.verifyChallenge({
+      wallet: publicKey,
+      nonce: challenge.nonce,
+      signature: encodedSignature,
+      signature_encoding: "base64",
+    });
+
+    if (verifyResponse.ok) {
+      setWalletState({
+        isAuthenticated: true,
+        isAuthenticating: false,
+        authError: null,
+      });
+    } else {
+      throw new Error("Authentication failed");
+    }
+  } catch (error: any) {
+    console.error("Authentication error:", error);
+    setWalletState({
+      isAuthenticated: false,
+      isAuthenticating: false,
+      authError: error.message || "Authentication failed",
+    });
     throw error;
   }
 }
 
 // Disconnect wallet
 export async function disconnectWallet() {
-  const adapter = walletState.adapter;
-  if (!adapter) return;
-
   try {
-    await adapter.disconnect();
+    // Disconnect wallet if connected
+    if (walletState.adapter) {
+      try {
+        await walletState.adapter.disconnect();
+      } catch (error) {
+        console.error("Failed to disconnect wallet adapter:", error);
+      }
+    }
+
+    // Clear all state
     setWalletState({
       isConnected: false,
       adapter: null,
       publicKey: null,
       walletName: null,
+      isAuthenticated: false,
+      authError: null,
     });
+
+    // Clear saved wallet
+    localStorage.removeItem(LAST_WALLET_KEY);
+
+    // Logout from backend
+    try {
+      await authClient.logout();
+    } catch (error) {
+      console.error("Failed to logout from backend:", error);
+    }
   } catch (error) {
-    console.error("Failed to disconnect wallet:", error);
+    console.error("Failed to disconnect:", error);
     // Still clear state even if disconnect fails
     setWalletState({
       isConnected: false,
       adapter: null,
       publicKey: null,
       walletName: null,
+      isAuthenticated: false,
+      authError: null,
     });
-    throw error;
+    localStorage.removeItem(LAST_WALLET_KEY);
   }
 }
 
@@ -156,6 +315,50 @@ export function openWalletModal() {
 
 export function closeWalletModal() {
   setWalletState({ isModalOpen: false });
+}
+
+// Check auth status on app load
+export async function checkAuthStatus() {
+  // Skip on server side
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const authInfo = await authClient.me();
+    if (authInfo && authInfo.sub) {
+      setWalletState({
+        isAuthenticated: true,
+        publicKey: authInfo.sub,
+        // Note: We can't restore wallet connection automatically
+        // because wallet adapters need user interaction
+        // But we keep the auth status to show user is logged in
+      });
+
+      console.log("Auth restored for wallet:", authInfo.sub);
+    }
+  } catch (error) {
+    // Not authenticated or auth expired, ignore
+    console.log("No valid auth session found");
+  }
+}
+
+// Re-authenticate existing wallet connection
+export async function reAuthenticateWallet() {
+  if (!walletState.adapter || !walletState.publicKey) {
+    return;
+  }
+
+  try {
+    await authenticateWallet(walletState.adapter);
+  } catch (error) {
+    console.error("Re-authentication failed:", error);
+    // If re-auth fails, clear auth state but keep wallet connected
+    setWalletState({
+      isAuthenticated: false,
+      authError: "Session expired. Please reconnect wallet.",
+    });
+  }
 }
 
 // Export state

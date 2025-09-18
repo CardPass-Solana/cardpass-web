@@ -12,5 +12,9 @@ export default defineConfig({
 			deployConfig: true,
 			nodeCompat: true,
 		},
+		// Cloudflare Workers environment variables (equivalent to wrangler.toml [vars])
+		vars: {
+			VITE_API_URL: "https://mihari-temp.yeongmin.net",
+		},
 	},
 });

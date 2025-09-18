@@ -363,3 +363,19 @@ export async function reAuthenticateWallet() {
 
 // Export state
 export { walletState };
+
+// Hook for easy access to wallet state and functions
+export function useWallet() {
+  return {
+    connected: () => walletState.isAuthenticated,
+    publicKey: () => walletState.publicKey,
+    wallet: () => walletState.adapter,
+    walletName: () => walletState.walletName,
+    isConnecting: () => walletState.isConnecting,
+    isAuthenticating: () => walletState.isAuthenticating,
+    connect: connectWallet,
+    disconnect: disconnectWallet,
+    openModal: openWalletModal,
+    closeModal: closeWalletModal,
+  };
+}

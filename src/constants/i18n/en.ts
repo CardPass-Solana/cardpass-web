@@ -1,7 +1,9 @@
 export const dict = {
 	nav: {
 		home: "Home",
+		profiles: "Profiles",
 		jobs: "Jobs",
+		resumes: "Resumes",
 		about: "About",
 		connectWallet: "Connect Wallet",
 	},

@@ -1,7 +1,9 @@
 export const dict = {
 	nav: {
 		home: "홈",
+		profiles: "인재",
 		jobs: "채용",
+		resumes: "레쥬메",
 		about: "소개",
 		connectWallet: "지갑 연결",
 	},
